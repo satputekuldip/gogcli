@@ -3,6 +3,7 @@
 ## 0.12.0 - Unreleased
 
 ### Added
+- YouTube: add `youtube` (alias `yt`) command group for YouTube Data API v3 — list activities, videos, playlists, comment threads, and channels; API key via config `youtube_api_key` or `GOG_YOUTUBE_API_KEY`; OAuth for “mine” with `gog auth add ... --services youtube`.
 - Sheets: add `sheets insert` to insert rows/columns into a sheet. (#203) — thanks @andybergon.
 - Gmail: add `watch serve --history-types` filtering (`messageAdded|messageDeleted|labelAdded|labelRemoved`) and include `deletedMessageIds` in webhook payloads. (#168) — thanks @salmonumbrella.
 - Contacts: support `--org`, `--title`, `--url`, `--note`, and `--custom` on create/update; include custom fields in get output with deterministic ordering. (#199) — thanks @phuctm97.

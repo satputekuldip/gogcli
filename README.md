@@ -3,7 +3,7 @@
 ![GitHub Repo Banner](https://ghrb.waren.build/banner?header=gogcli%F0%9F%A7%AD&subheader=Google+in+your+terminal&bg=f3f4f6&color=1f2937&support=true)
 <!-- Created with GitHub Repo Banner by Waren Gonzaga: https://ghrb.waren.build -->
 
-Fast, script-friendly CLI for Gmail, Calendar, Chat, Classroom, Drive, Docs, Slides, Sheets, Forms, Apps Script, Contacts, Tasks, People, Groups (Workspace), and Keep (Workspace-only). JSON-first output, multiple accounts, and least-privilege auth built in.
+Fast, script-friendly CLI for Gmail, Calendar, Chat, Classroom, Drive, Docs, Slides, Sheets, Forms, Apps Script, Contacts, Tasks, People, Groups (Workspace), Keep (Workspace-only), and YouTube. JSON-first output, multiple accounts, and least-privilege auth built in.
 
 ## Features
 
@@ -22,6 +22,7 @@ Fast, script-friendly CLI for Gmail, Calendar, Chat, Classroom, Drive, Docs, Sli
 - **People** - access profile information
 - **Keep (Workspace only)** - list/get/search notes and download attachments (service account + domain-wide delegation)
 - **Groups** - list groups you belong to, view group members (Google Workspace)
+- **YouTube** - list activities, videos, playlists, comment threads, and channels (API key or OAuth for “mine”)
 - **Local time** - quick local/UTC time display for scripts and agents
 - **Multiple accounts** - manage multiple Google accounts simultaneously (with aliases)
 - **Command allowlist** - restrict top-level commands for sandboxed/agent runs
@@ -87,6 +88,7 @@ Before adding an account, create OAuth2 credentials from Google Cloud Console:
    - Google Forms API: https://console.cloud.google.com/apis/api/forms.googleapis.com
    - Apps Script API: https://console.cloud.google.com/apis/api/script.googleapis.com
    - Cloud Identity API (Groups): https://console.cloud.google.com/apis/api/cloudidentity.googleapis.com
+   - YouTube Data API v3 (YouTube): https://console.cloud.google.com/apis/api/youtube.googleapis.com
 3. Configure OAuth consent screen: https://console.cloud.google.com/auth/branding
 4. If your app is in "Testing", add test users: https://console.cloud.google.com/auth/audience
 5. Create OAuth client:
@@ -356,6 +358,7 @@ Service scope matrix (auto-generated; run `go run scripts/gen-auth-services-md.g
 | appscript | yes | Apps Script API | `https://www.googleapis.com/auth/script.projects`<br>`https://www.googleapis.com/auth/script.deployments`<br>`https://www.googleapis.com/auth/script.processes` |  |
 | groups | no | Cloud Identity API | `https://www.googleapis.com/auth/cloud-identity.groups.readonly` | Workspace only |
 | keep | no | Keep API | `https://www.googleapis.com/auth/keep.readonly` | Workspace only; service account (domain-wide delegation) |
+| youtube | yes | YouTube Data API v3 | `https://www.googleapis.com/auth/youtube.readonly` | Most read operations also work with API key only (config youtube_api_key or GOG_YOUTUBE_API_KEY) |
 <!-- auth-services:end -->
 
 ### Service Accounts (Workspace only)
@@ -416,7 +419,8 @@ gog keep get <noteId> --account you@yourdomain.com
 - `GOG_PLAIN` - Default plain output
 - `GOG_COLOR` - Color mode: `auto` (default), `always`, or `never`
 - `GOG_TIMEZONE` - Default output timezone for Calendar/Gmail (IANA name, `UTC`, or `local`)
-- `GOG_ENABLE_COMMANDS` - Comma-separated allowlist of top-level commands (e.g., `calendar,tasks`)
+- `GOG_ENABLE_COMMANDS` - Comma-separated allowlist of top-level commands (e.g., `calendar,tasks,youtube`)
+- `GOG_YOUTUBE_API_KEY` - YouTube Data API key (overrides config `youtube_api_key` when set)
 
 ### Config File (JSON5)
 
@@ -436,6 +440,8 @@ Example (JSON5 supports comments and trailing commas):
   keyring_backend: "file",
   // Default output timezone for Calendar/Gmail (IANA, UTC, or local)
   default_timezone: "UTC",
+  // YouTube Data API key (optional; or set GOG_YOUTUBE_API_KEY)
+  // youtube_api_key: "YOUR_KEY",
   // Optional account aliases
   account_aliases: {
     work: "work@company.com",
@@ -949,6 +955,43 @@ gog tasks clear <tasklistId>
 
 # Note: Google Tasks treats due dates as date-only; time components may be ignored.
 # See docs/dates.md for all supported date/time input formats across commands.
+```
+
+### YouTube
+
+YouTube Data API commands use an **API key** for public data (by channel/video/playlist ID). For “mine” (your channel, playlists, activities), use OAuth with `-a` and `gog auth add ... --services youtube`.
+
+Set an API key (create one in [Google Cloud Console](https://console.cloud.google.com/apis/credentials) after enabling YouTube Data API v3):
+
+```bash
+gog config set youtube_api_key YOUR_API_KEY
+# or
+export GOG_YOUTUBE_API_KEY=YOUR_API_KEY
+```
+
+```bash
+# Activities (channel feed)
+gog yt activities list --channel-id UC_x5XG1OV2P6uZZ5FSM9Ttw --max 10
+gog yt activities list --mine -a you@gmail.com    # OAuth
+
+# Videos
+gog yt videos list --id dQw4w9WgXcQ
+gog yt videos list --chart mostPopular --region US --max 5
+
+# Playlists
+gog yt playlists list --channel-id UC_x5XG1OV2P6uZZ5FSM9Ttw
+gog yt playlists list --mine -a you@gmail.com   # OAuth
+
+# Comment threads
+gog yt comments list --video-id VIDEO_ID --max 20
+gog yt comments list --channel-id CHANNEL_ID
+
+# Channels
+gog yt channels list --id UC_x5XG1OV2P6uZZ5FSM9Ttw
+gog yt channels list --mine -a you@gmail.com    # OAuth
+
+# JSON output
+gog yt channels list --id UC_x5XG1OV2P6uZZ5FSM9Ttw --json
 ```
 
 ### Sheets
@@ -1508,6 +1551,7 @@ MIT
 - [Google Drive API Documentation](https://developers.google.com/drive)
 - [Google People API Documentation](https://developers.google.com/people)
 - [Google Tasks API Documentation](https://developers.google.com/tasks)
+- [YouTube Data API Documentation](https://developers.google.com/youtube/v3)
 - [Google Sheets API Documentation](https://developers.google.com/sheets)
 - [Cloud Identity API Documentation](https://cloud.google.com/identity/docs/reference/rest)
 

@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
@@ -12,6 +13,7 @@ type Key string
 const (
 	KeyTimezone       Key = "timezone"
 	KeyKeyringBackend Key = "keyring_backend"
+	KeyYoutubeAPIKey  Key = "youtube_api_key"
 )
 
 type KeySpec struct {
@@ -25,6 +27,7 @@ type KeySpec struct {
 var keyOrder = []Key{
 	KeyTimezone,
 	KeyKeyringBackend,
+	KeyYoutubeAPIKey,
 }
 
 var keySpecs = map[Key]KeySpec{
@@ -61,6 +64,25 @@ var keySpecs = map[Key]KeySpec{
 		},
 		EmptyHint: func() string {
 			return "(not set, using auto)"
+		},
+	},
+	KeyYoutubeAPIKey: {
+		Key: KeyYoutubeAPIKey,
+		Get: func(cfg File) string {
+			if v := os.Getenv("GOG_YOUTUBE_API_KEY"); v != "" {
+				return v
+			}
+			return cfg.YoutubeAPIKey
+		},
+		Set: func(cfg *File, value string) error {
+			cfg.YoutubeAPIKey = value
+			return nil
+		},
+		Unset: func(cfg *File) {
+			cfg.YoutubeAPIKey = ""
+		},
+		EmptyHint: func() string {
+			return "(not set; set for YouTube Data API: config set youtube_api_key KEY or GOG_YOUTUBE_API_KEY)"
 		},
 	},
 }
